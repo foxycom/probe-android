@@ -6,6 +6,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.openobservatory.ooniprobe.AbstractTest;
+import org.openobservatory.ooniprobe.client.callback.CheckReportIdCallback;
 import org.openobservatory.ooniprobe.client.callback.GetMeasurementJsonCallback;
 import org.openobservatory.ooniprobe.client.callback.GetMeasurementsCallback;
 import org.openobservatory.ooniprobe.model.api.ApiMeasurement;
@@ -22,7 +23,6 @@ import okhttp3.Request;
 
 public class OONIAPIClientTest extends AbstractTest {
     private static final String EXISTING_REPORT_ID = "20190113T202156Z_AS327931_CgoC3KbgM6zKajvIIt1AxxybJ1HbjwwWJjsJnlxy9rpcGY54VH";
-    private static final String EXISTING_REPORT_ID_2 = "20190702T000027Z_AS5413_6FT78sjp5qnESDVWlFlm6bfxxwOEqR08ySAwigTF6C8PFCbMsM";
     private static final String NONEXISTING_REPORT_ID = "EMPTY";
     private static final String NON_EXISTING_MEASUREMENT_URL = "https://api.ooni.io/api/v1/measurement/nonexistent-measurement-url";
     private static final String JSON_URL = "https://api.ooni.io/api/v1/measurement/temp-id-263478291";
@@ -76,15 +76,27 @@ public class OONIAPIClientTest extends AbstractTest {
 
     @Test
     public void testSelectMeasurementsWithJson() throws IOException {
+        final CountDownLatch signal = new CountDownLatch(1);
         Delete.table(Measurement.class);
         addMeasurement(EXISTING_REPORT_ID, false);
-        addMeasurement(EXISTING_REPORT_ID_2, true);
-        addMeasurement(NONEXISTING_REPORT_ID, true);
-        List<Measurement> measurements = Measurement.selectMeasurementsWithJson(a);
-        //I create 3 measurement and only two of them have a file on disk
-        Assert.assertTrue(measurements.size() == 2 &&
-            containsMeasurement(measurements, NONEXISTING_REPORT_ID) &&
-            containsMeasurement(measurements, EXISTING_REPORT_ID_2));
+        a.getApiClient().checkReportId(EXISTING_REPORT_ID).enqueue(new CheckReportIdCallback() {
+            @Override
+            public void onSuccess(Boolean found) {
+                Assert.assertTrue(found);
+                signal.countDown();
+            }
+
+            @Override
+            public void onError(String msg) {
+                signal.countDown();
+            }
+        });
+        try {
+            signal.await(1, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            Assert.fail();
+        }
     }
 
     private Boolean containsMeasurement(List<Measurement> measurements, String report_id){
@@ -142,6 +154,7 @@ public class OONIAPIClientTest extends AbstractTest {
             Assert.fail();
         }
     }
+
     private Measurement addMeasurement(String report_id, Boolean write_file) throws IOException {
         //Simulating measurement done and uploaded
         Measurement measurement = new Measurement();

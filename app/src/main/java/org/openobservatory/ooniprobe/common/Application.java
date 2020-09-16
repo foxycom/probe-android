@@ -1,5 +1,9 @@
 package org.openobservatory.ooniprobe.common;
 
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleObserver;
+import androidx.lifecycle.OnLifecycleEvent;
+import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -10,6 +14,7 @@ import com.raizlabs.android.dbflow.config.FlowManager;
 import org.openobservatory.ooniprobe.BuildConfig;
 import org.openobservatory.ooniprobe.client.OONIAPIClient;
 import org.openobservatory.ooniprobe.client.OONIOrchestraClient;
+import org.openobservatory.ooniprobe.model.database.Measurement;
 import org.openobservatory.ooniprobe.model.jsonresult.TestKeys;
 
 import java.io.IOException;
@@ -25,6 +30,7 @@ import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+
 
 public class Application extends android.app.Application {
 
@@ -43,18 +49,20 @@ public class Application extends android.app.Application {
 		super.onCreate();
 		FlowManager.init(this);
 		preferenceManager = new PreferenceManager(this);
+		CountlyManager.register(this, preferenceManager);
+		AppLifecycleObserver appLifecycleObserver = new AppLifecycleObserver();
+		ProcessLifecycleOwner.get().getLifecycle().addObserver(appLifecycleObserver);
 		Type type = new TypeToken<ArrayList<TestKeys.TorTarget>>(){}.getType();
 		gson = new GsonBuilder().registerTypeAdapter(Date.class, new DateAdapter())
 				.registerTypeAdapter(TestKeys.Tampering.class, new TamperingJsonDeserializer())
 				.registerTypeAdapter(type, new TargetsJsonDeserializer())
 				.create();
-		FlavorApplication.onCreate(this, preferenceManager.isSendCrash());
+		FlavorApplication.onCreate(this);
 		if (BuildConfig.DEBUG)
 			FlowLog.setMinimumLoggingLevel(FlowLog.Level.V);
-		// Code commented to prevent callling API on app start
-		//if (preferenceManager.canCallDeleteJson())
-		//	Measurement.deleteUploadedJsons(this);
-
+		if (preferenceManager.canCallDeleteJson())
+			Measurement.deleteUploadedJsons(this);
+		Measurement.deleteOldLogs(this);
 	}
 
 	public OkHttpClient getOkHttpClient() {
@@ -113,4 +121,18 @@ public class Application extends android.app.Application {
 	public void setTestRunning(boolean testRunning) {
 		this.testRunning = testRunning;
 	}
+
+	//from https://medium.com/mindorks/detecting-when-an-android-app-is-in-foreground-or-background-7a1ff49812d7
+	public class AppLifecycleObserver implements LifecycleObserver {
+
+		@OnLifecycleEvent(Lifecycle.Event.ON_START)
+		public void onEnterForeground() {
+			preferenceManager.incrementAppOpenCount();
+		}
+
+		@OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+		public void onEnterBackground() {
+		}
+	}
+
 }

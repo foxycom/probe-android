@@ -4,41 +4,45 @@ import android.content.Intent;
 import android.util.Log;
 
 import com.google.firebase.messaging.RemoteMessage;
+import org.openobservatory.ooniprobe.R;
+import org.openobservatory.ooniprobe.activity.MainActivity;
 
-import org.json.JSONObject;
-import org.openobservatory.ooniprobe.activity.NotificationDialogActivity;
-
-import java.util.Map;
+import ly.count.android.sdk.messaging.CountlyPush;
 
 public class FirebaseMessagingService extends com.google.firebase.messaging.FirebaseMessagingService {
 	private static final String TAG = "FCM";
 
 	@Override
 	public void onMessageReceived(RemoteMessage remoteMessage) {
-		// TODO(developer): Handle FCM messages here.
-		// Not getting messages here? See why this may be: https://goo.gl/39bRNJ
-		Log.d(TAG, "Message from: " + remoteMessage.getFrom());
-		Log.d(TAG, "Message data payload: " + remoteMessage.getData());
-		Map<String, String> params = remoteMessage.getData();
-		// Check if message contains a data payload.
-		if (remoteMessage.getData().size() > 0) {
-			try {
-				//TODO-FUTURE we can use click_action instead of type
-				JSONObject data = new JSONObject(params.toString());
-				if (data.getString("type").equals("open_href")) {
-					Intent intent = new Intent(getApplicationContext(), NotificationDialogActivity.class);
-					intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-					intent.putExtra("message", remoteMessage.getNotification().getBody());
-					intent.putExtra("payload", data.getString("payload"));
-					getApplicationContext().startActivity(intent);
-				}
-			} catch (Exception e) {
-				System.out.println("JSONException " + e);
-			}
+		super.onMessageReceived(remoteMessage);
+
+		Log.d(TAG, "got new message: " + remoteMessage.getData());
+
+		// decode message data and extract meaningful information from it: title, body, badge, etc.
+		CountlyPush.Message message = CountlyPush.decodeMessage(remoteMessage.getData());
+
+		Intent notificationIntent = null;
+		if (!message.has("c.l")) {
+			notificationIntent = new Intent(this, MainActivity.class);
+			notificationIntent.putExtra(MainActivity.NOTIFICATION_DIALOG, "yes");
+			notificationIntent.putExtra("title", message.title());
+			notificationIntent.putExtra("message", message.message());
+		}
+		
+		Boolean result = CountlyPush.displayMessage(getApplicationContext(), message, R.drawable.notification_icon, notificationIntent);
+		if (result == null) {
+			Log.d(TAG, "Message wasn't sent from Countly server, so it cannot be handled by Countly SDK");
+		} else if (result) {
+			Log.d(TAG, "Message was handled by Countly SDK");
+		} else {
+			Log.d(TAG, "Message wasn't handled by Countly SDK because API level is too low for Notification support or because currentActivity is null (not enough lifecycle method calls)");
 		}
 	}
 
-	@Override public void onNewToken(String token) {
+	@Override
+	public void onNewToken(String token) {
+		super.onNewToken(token);
 		((Application) getApplicationContext()).getPreferenceManager().setToken(token);
+		CountlyPush.onTokenRefresh(token);
 	}
 }

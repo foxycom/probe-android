@@ -14,7 +14,7 @@ import com.raizlabs.android.dbflow.sql.language.SQLite;
 import com.raizlabs.android.dbflow.sql.language.Where;
 import com.raizlabs.android.dbflow.structure.BaseModel;
 
-import org.openobservatory.ooniprobe.client.callback.GetMeasurementsCallback;
+import org.openobservatory.ooniprobe.client.callback.CheckReportIdCallback;
 import org.openobservatory.ooniprobe.common.AppDatabase;
 import org.openobservatory.ooniprobe.common.Application;
 import org.openobservatory.ooniprobe.common.PreferenceManager;
@@ -36,7 +36,9 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Table(database = AppDatabase.class)
 public class Measurement extends BaseModel implements Serializable {
@@ -75,6 +77,13 @@ public class Measurement extends BaseModel implements Serializable {
 		start_time = new java.util.Date();
 	}
 
+	public static Where<Measurement> selectDone() {
+		return SQLite.select().from(Measurement.class)
+				.where(Measurement_Table.is_failed.eq(false))
+				.and(Measurement_Table.is_rerun.eq(false))
+				.and(Measurement_Table.is_done.eq(true));
+	}
+
 	public static Where<Measurement> selectUploadable() {
 		// We check on both the report_id and is_uploaded as we
 		// may have some unuploaded measurements which are marked
@@ -105,15 +114,30 @@ public class Measurement extends BaseModel implements Serializable {
 		return Measurement.selectUploadable().and(Measurement_Table.result_id.eq(resultId));
 	}
 
-	public static List<Measurement> selectMeasurementsWithJson(Context c) {
+	public static Where<Measurement> selectWithReportId(String report_id) {
+		return Measurement.selectUploaded().and(Measurement_Table.report_id.eq(report_id));
+	}
+
+	public static Set<String> getReportsUploaded(Context c) {
 		Where<Measurement> msmQuery = Measurement.selectUploaded();
-		List<Measurement> measurementsJson = new ArrayList<>();
+		Set<String> reportIds = new HashSet<>();
 		List<Measurement> measurements = msmQuery.queryList();
 		for (Measurement measurement : measurements){
 			if (measurement.hasReportFile(c))
-				measurementsJson.add(measurement);
+				reportIds.add(measurement.report_id);
 		}
-		return measurementsJson;
+		return reportIds;
+	}
+
+	public static List<Measurement> selectMeasurementsWithLog(Context c) {
+		Where<Measurement> msmQuery = Measurement.selectDone();
+		List<Measurement> measurementsLog = new ArrayList<>();
+		List<Measurement> measurements = msmQuery.queryList();
+		for (Measurement measurement : measurements){
+			if (measurement.hasReportFile(c))
+				measurementsLog.add(measurement);
+		}
+		return measurementsLog;
 	}
 
 	public static File getEntryFile(Context c, int measurementId, String test_name) {
@@ -217,15 +241,13 @@ public class Measurement extends BaseModel implements Serializable {
 
 	public static void deleteUploadedJsons(Application a){
 		PreferenceManager pm = a.getPreferenceManager();
-		List<Measurement> measurements = Measurement.selectMeasurementsWithJson(a);
-		for (int i = 0; i < measurements.size(); i++) {
-			Measurement measurement = measurements.get(i);
-			//measurement.getUrlString will return null when the measurement is not a web_connectivity
-			a.getApiClient().getMeasurement(measurement.report_id, measurement.getUrlString()).enqueue(new GetMeasurementsCallback() {
+		Set<String> reportids = Measurement.getReportsUploaded(a);
+		for (String report_id : reportids) {
+			a.getApiClient().checkReportId(report_id).enqueue(new CheckReportIdCallback() {
 				@Override
-				public void onSuccess(ApiMeasurement.Result result) {
-					measurement.deleteEntryFile(a);
-					measurement.deleteLogFileAfterAWeek(a);
+				public void onSuccess(Boolean found) {
+					if (found)
+						Measurement.deleteMeasurementWithReportId(a, report_id);
 				}
 
 				@Override
@@ -235,6 +257,23 @@ public class Measurement extends BaseModel implements Serializable {
 			});
 		}
 		pm.setLastCalled();
+	}
+
+	public static void deleteMeasurementWithReportId(Context c, String report_id) {
+		Where<Measurement> msmQuery = Measurement.selectWithReportId(report_id);
+		List<Measurement> measurements = msmQuery.queryList();
+		for (int i = 0; i < measurements.size(); i++) {
+			Measurement measurement = measurements.get(i);
+			measurement.deleteEntryFile(c);
+		}
+	}
+
+	public static void deleteOldLogs(Application a){
+		List<Measurement> measurements = Measurement.selectMeasurementsWithLog(a);
+		for (int i = 0; i < measurements.size(); i++) {
+			Measurement measurement = measurements.get(i);
+			measurement.deleteLogFileAfterAWeek(a);
+		}
 	}
 
 	public void setReRun(Context c){
