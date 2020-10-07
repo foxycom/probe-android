@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.text.TextUtils;
 
-import org.openobservatory.engine.Engine;
+import org.openobservatory.engine.OONIEngine;
 import org.openobservatory.ooniprobe.R;
 
 import java.util.ArrayList;
@@ -227,7 +227,7 @@ public class PreferenceManager {
 	}
 
 	public String getOrGenerateUUID4() {
-		String uuid = sp.getString(UUID4, Engine.newUUID4());
+		String uuid = sp.getString(UUID4, OONIEngine.newUUID4());
 		sp.edit().putString(UUID4, uuid).apply();
 		return uuid;
 	}

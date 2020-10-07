@@ -2,7 +2,7 @@ package org.openobservatory.ooniprobe.test;
 
 import android.os.AsyncTask;
 
-import org.openobservatory.engine.Engine;
+import org.openobservatory.engine.OONIEngine;
 import org.openobservatory.ooniprobe.BuildConfig;
 import org.openobservatory.ooniprobe.R;
 import org.openobservatory.ooniprobe.activity.AbstractActivity;
@@ -58,7 +58,7 @@ public class TestAsyncTask<ACT extends AbstractActivity> extends AsyncTask<Abstr
 				if (downloadUrls) {
 					String probeCC = "XX";
 					try {
-						probeCC = Engine.resolveProbeCC(
+						probeCC = OONIEngine.resolveProbeCC(
 								act,
 								BuildConfig.SOFTWARE_NAME,
 								BuildConfig.VERSION_NAME,

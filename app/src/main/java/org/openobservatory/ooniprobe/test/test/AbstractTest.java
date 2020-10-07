@@ -12,7 +12,7 @@ import androidx.annotation.StringRes;
 import com.google.gson.Gson;
 
 import org.apache.commons.io.FileUtils;
-import org.openobservatory.engine.Engine;
+import org.openobservatory.engine.OONIEngine;
 import org.openobservatory.engine.OONIMKTask;
 import org.openobservatory.ooniprobe.common.ExceptionManager;
 import org.openobservatory.ooniprobe.common.MKException;
@@ -66,7 +66,7 @@ public abstract class AbstractTest implements Serializable {
         settings.annotations.origin = origin;
         measurements = new SparseArray<>();
         try {
-            task = Engine.startExperimentTask(settings.toExperimentSettings(gson, c));
+            task = OONIEngine.startExperimentTask(settings.toExperimentSettings(gson, c));
         } catch (Exception exc) {
             exc.printStackTrace();
             ExceptionManager.logException(exc);

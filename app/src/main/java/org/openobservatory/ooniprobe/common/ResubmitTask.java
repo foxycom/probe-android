@@ -10,7 +10,7 @@ import com.raizlabs.android.dbflow.sql.language.Where;
 
 import org.apache.commons.io.FileUtils;
 import org.openobservatory.engine.LoggerArray;
-import org.openobservatory.engine.Engine;
+import org.openobservatory.engine.OONIEngine;
 import org.openobservatory.engine.OONIContext;
 import org.openobservatory.engine.OONISession;
 import org.openobservatory.engine.OONISubmitResults;
@@ -96,7 +96,7 @@ public class ResubmitTask<A extends AppCompatActivity> extends NetworkProgressAs
         List<Measurement> measurements = msmQuery.queryList();
         totUploads = measurements.size();
         try {
-            OONISession session = Engine.newSession(Engine.getDefaultSessionConfig(
+            OONISession session = OONIEngine.newSession(OONIEngine.getDefaultSessionConfig(
                     getActivity(), BuildConfig.SOFTWARE_NAME, BuildConfig.VERSION_NAME, logger));
             // Updating resources with no timeout because we don't know for sure how much
             // it will take to download them and choosing a timeout may prevent the operation

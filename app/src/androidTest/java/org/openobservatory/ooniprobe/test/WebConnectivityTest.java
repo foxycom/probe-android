@@ -6,7 +6,7 @@ import com.google.gson.Gson;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.openobservatory.engine.Engine;
+import org.openobservatory.engine.OONIEngine;
 import org.openobservatory.engine.OONIMKTask;
 import org.openobservatory.ooniprobe.AbstractTest;
 import org.openobservatory.ooniprobe.model.jsonresult.EventResult;
@@ -36,7 +36,7 @@ public class WebConnectivityTest extends AbstractTest {
         settings.options.no_collector = false;
         settings.options.probe_services_base_url = CLIENT_URL;
         try {
-            task = Engine.startExperimentTask(settings.toExperimentSettings(gson, c));
+            task = OONIEngine.startExperimentTask(settings.toExperimentSettings(gson, c));
         } catch (Exception exc) {
             Assert.fail();
         }
