@@ -1,6 +1,11 @@
 package org.openobservatory.engine
 
-import oonimkall.*
+import oonimkall.Context
+import oonimkall.GeolocateResults
+import oonimkall.Oonimkall
+import oonimkall.SessionConfig
+import oonimkall.Session
+import oonimkall.SubmitMeasurementResults
 
 /** OONIContext is the context for long running tasks.  */
 class OONIContext internal constructor(var ctx: Context) {
@@ -142,16 +147,12 @@ class OONISubmitResults(r: SubmitMeasurementResults) {
     /** updatedMeasurement is a copy of the original measurement
      * in which the report ID has been updated.  */
     @JvmField
-    val updatedMeasurement: String
+    val updatedMeasurement: String = r.updatedMeasurement
 
     /** updatedReportID returns the updated report ID.  */
     @JvmField
-    val updatedReportID: String
+    val updatedReportID: String = r.updatedReportID
 
-    init {
-        updatedMeasurement = r.updatedMeasurement
-        updatedReportID = r.updatedReportID
-    }
 }
 
 internal class PESession(config: OONISessionConfig) : OONISession {
@@ -159,19 +160,15 @@ internal class PESession(config: OONISessionConfig) : OONISession {
 
     @Throws(OONIException::class)
     override fun geolocate(ctx: OONIContext): OONIGeolocateResults {
-        return try {
+        return maybeRewriteException("session.geolocate failed") {
             OONIGeolocateResults(session!!.geolocate(ctx.ctx))
-        } catch (exc: Exception) {
-            throw OONIException("session.geolocate failed", exc)
         }
     }
 
     @Throws(OONIException::class)
     override fun maybeUpdateResources(ctx: OONIContext) {
-        try {
+        return maybeRewriteException("session.maybeUpdateResources failed") {
             session!!.maybeUpdateResources(ctx.ctx)
-        } catch (exc: Exception) {
-            throw OONIException("session.maybeUpdateResources failed", exc)
         }
     }
 
@@ -185,18 +182,14 @@ internal class PESession(config: OONISessionConfig) : OONISession {
 
     @Throws(OONIException::class)
     override fun submit(ctx: OONIContext, measurement: String): OONISubmitResults {
-        return try {
+        return maybeRewriteException("session.submit failed") {
             OONISubmitResults(session!!.submit(ctx.ctx, measurement))
-        } catch (exc: Exception) {
-            throw OONIException("", exc)
         }
     }
 
     init {
-        session = try {
+        session = maybeRewriteException("Oonimkall.newSession failed") {
             Oonimkall.newSession(config.toOonimkallSessionConfig())
-        } catch (exc: Exception) {
-            throw OONIException("Oonimkall.newSession failed", exc)
         }
     }
 }

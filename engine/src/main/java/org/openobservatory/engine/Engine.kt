@@ -23,10 +23,8 @@ object OONIEngine {
     @JvmStatic
     @Throws(OONIException::class)
     fun startExperimentTask(settings: OONIMKTaskConfig): OONIMKTask {
-        return try {
+        return maybeRewriteException("Oonimkall.startTask failed") {
             PEMKTask(Oonimkall.startTask(settings.serialization()))
-        } catch (exc: Exception) {
-            throw OONIException("cannot start OONI Probe Engine task", exc)
         }
     }
 
@@ -58,7 +56,7 @@ object OONIEngine {
     @Throws(OONIException::class)
     fun getDefaultSessionConfig(ctx: Context, softwareName: String,
                                 softwareVersion: String, logger: OONILogger): OONISessionConfig {
-        return try {
+        return maybeRewriteException("getDefaultSessionConfig failed") {
             val config = OONISessionConfig()
             config.logger = LoggerComposed(logger, LoggerAndroid())
             config.softwareName = softwareName
@@ -68,8 +66,6 @@ object OONIEngine {
             config.stateDir = getStateDir(ctx)
             config.tempDir = getTempDir(ctx)
             config
-        } catch (exc: IOException) {
-            throw OONIException("getDefaultSessionConfig failed", exc)
         }
     }
 
@@ -104,5 +100,14 @@ object OONIEngine {
     @Throws(IOException::class)
     fun getTempDir(ctx: Context): String {
         return File(ctx.cacheDir, "").canonicalPath
+    }
+}
+
+@Throws(OONIException::class)
+internal fun <T: Any> maybeRewriteException(msg: String, f: ()->T): T {
+    return try {
+        f()
+    } catch (exc: Exception) {
+        throw OONIException(msg, exc)
     }
 }
