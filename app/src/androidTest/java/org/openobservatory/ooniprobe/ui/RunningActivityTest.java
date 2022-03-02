@@ -12,6 +12,7 @@ import com.schibsted.spain.barista.rule.flaky.FlakyTestRule;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.Ignore;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.openobservatory.ooniprobe.AbstractTest;
@@ -31,6 +32,7 @@ import java.util.concurrent.TimeoutException;
 import static org.openobservatory.ooniprobe.testing.ActivityAssertions.assertCurrentActivity;
 import static org.openobservatory.ooniprobe.testing.ActivityAssertions.waitForCurrentActivity;
 
+@Ignore
 @RunWith(AndroidJUnit4.class)
 public class RunningActivityTest extends AbstractTest {
 

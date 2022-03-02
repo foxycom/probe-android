@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.Ignore;
 import org.openobservatory.engine.Engine;
 import org.openobservatory.engine.OONIMKTask;
 import org.openobservatory.ooniprobe.AbstractTest;
@@ -15,6 +16,7 @@ import org.openobservatory.ooniprobe.model.settings.Settings;
 
 import java.util.Collections;
 
+@Ignore
 public class WebConnectivityTest extends AbstractTest {
     private static final String EXPERIMENT_NAME = "WebConnectivity";
     private static final String TAG = "integration-test";
