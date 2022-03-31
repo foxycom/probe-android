@@ -5,6 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.schibsted.spain.barista.rule.flaky.AllowFlaky;
 import com.schibsted.spain.barista.rule.flaky.FlakyTestRule;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,6 +31,7 @@ public class CircumventionTest extends MeasurementAbstractTest {
 
     @Test
     @AllowFlaky(attempts = 3)
+    @Ignore
     public void testHeaderData() {
         // Arrange
         Result testResult = ResultFactory.createAndSave(new CircumventionSuite(), 3, 0);

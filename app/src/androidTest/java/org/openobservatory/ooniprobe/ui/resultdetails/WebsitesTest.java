@@ -39,6 +39,7 @@ public class WebsitesTest extends MeasurementAbstractTest {
 
     @Test
     @AllowFlaky(attempts = 3)
+    @Ignore
     public void testHeaderData() {
         // Arrange
         Result testResult = ResultFactory.createAndSave(new WebsitesSuite(), 10, 2);
