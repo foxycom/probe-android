@@ -5,6 +5,7 @@ import android.util.Log;
 import com.google.gson.Gson;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openobservatory.engine.Engine;
 import org.openobservatory.engine.OONIMKTask;
@@ -22,6 +23,7 @@ public class WebConnectivityTest extends AbstractTest {
     private static final String CLIENT_URL = "https://ams-pg.ooni.org";
 
     @Test
+    @Ignore
     public void runWebConnectivity() {
         boolean submitted = false;
         String report_id_1 = "r1";
