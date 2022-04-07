@@ -10,7 +10,7 @@ if (jacocoEnabled.toBoolean()) {
 // General switch for tests types this control report generation but not yet unit test selection - TODO Make this a flag
 def carvedTests = project.hasProperty('carvedTests')// ? project.getProperty('carvedTests') : false //Default value false
 
-def carvedTestSrcDir = "src/carvedTest"
+def carvedTestSrcDir = "src/allCarvedTest"
 def testReportPrefix = "${buildDir}/carvedTest/testExecution"
 def coverageReportPrefix = "${buildDir}/carvedTest/coverage"
 
