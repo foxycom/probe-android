@@ -15,7 +15,7 @@ tasks.withType(Test) {
     jacoco.excludes = ['jdk.internal.*']
 }
 
-task jacocoTestsReport(type: JacocoReport, dependsOn: ['testDebugUnitTest']) {
+task jacocoTestsReport(type: JacocoReport, dependsOn: ['testStableFdroidDebugUnitTest']) {
     group = "Reporting"
     description = "Generate Jacoco coverage reports after running the Original Tests."
 
@@ -48,7 +48,7 @@ task jacocoTestsReport(type: JacocoReport, dependsOn: ['testDebugUnitTest']) {
                       '**/*lambda*.class']
 
     def debugTree = fileTree(dir:
-            "${buildDir}/intermediates/javac/debug/classes",
+            "${buildDir}/intermediates/javac/stableFdroidDebug/classes",
             excludes: fileFilter
     )
 
@@ -58,13 +58,13 @@ task jacocoTestsReport(type: JacocoReport, dependsOn: ['testDebugUnitTest']) {
     getSourceDirectories().setFrom(files([mainSrc]))
     getClassDirectories().setFrom(files([debugTree]))
     getExecutionData().setFrom(fileTree(dir: "${buildDir}", includes:[
-            "/jacoco/testDebugUnitTest.exec"]))
+            "/jacoco/testStableFdroidDebugUnitTest.exec"]))
     //classDirectories = files([debugTree])
     //executionData = fileTree(dir: "${buildDir}", includes:[
     //        "/jacoco/testDebugUnitTest.exec"])
 }
 
-task jacocoUnitTestCoverage(type: JacocoReport, dependsOn: ['testDebugUnitTest']) {
+task jacocoUnitTestCoverage(type: JacocoReport, dependsOn: ['testStableFdroidDebugUnitTest']) {
     group = 'Reporting'
     description = 'Generate JaCoCo coverage report for unit tests'
     reports {
@@ -86,7 +86,7 @@ task jacocoUnitTestCoverage(type: JacocoReport, dependsOn: ['testDebugUnitTest']
 
     getExecutionData().setFrom(fileTree(
             dir: "${buildDir}",
-            include: ['jacoco/testDebugUnitTest.exec']
+            include: ['jacoco/testStableFdroidDebugUnitTest.exec']
     ))
 }
 

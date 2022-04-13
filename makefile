@@ -7,11 +7,24 @@ ABC_CFG=../../scripts/.abc-config
 # -Dabc.instrument.debug -Dabc.instrument.multithreaded"
 JAVA_OPTS=" -Dabc.instrument.array.operations -Dabc.instrument.fields.operations -Dabc.taint.android.intents -Dabc.instrument.include=org.openobservatory.ooniprobe "
 
+# org.openobservatory.ooniprobe.common.Application this is HUGE and increases the carving time 10 folds
+# Otherwise, skip/filter database operations see the stats
+# This is automatically generated: org.openobservatory.ooniprobe.model.database.Url_Table
 INSTRUMENTATION_OPTS=" \
 --skip-class=org.openobservatory.ooniprobe.R \
+--skip-class=org.openobservatory.ooniprobe.common.Application \
+--skip-class=org.openobservatory.ooniprobe.model.database.Url_Table \
+--skip-class=org.openobservatory.ooniprobe.model.database.Result_Table \
+--skip-class=org.openobservatory.ooniprobe.model.database.Measurement_Table \
+--skip-class=org.openobservatory.ooniprobe.model.database.Network_Table \
+--filter-method=android.database.CursorWrapper.isNull \
+--filter-method=java.util.Iterator.hasNext \
 --filter-package=java.io \
 --filter-class=java.lang.StringBuilder \
 "
+
+# Activate more logging:
+# -Dorg.slf4j.simpleLogger.log.de.unipassau.abc.carving.BasicCarver=debug
 
 CARVING_JAVA_OPTIONS=" \
 -Dorg.slf4j.simpleLogger.defaultLogLevel=info \
